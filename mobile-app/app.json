@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "Velmora",
+    "slug": "velmora",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#050505"
+    },
+    "android": {
+      "package": "com.velmora.store",
+      "adaptiveIcon": {
+        "backgroundColor": "#050505"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.velmora.store"
+    },
+    "extra": {
+      "eas": {
+        "projectId": ""
+      }
+    }
+  }
+}
