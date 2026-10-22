@@ -88,3 +88,11 @@ create policy "Approved admins can delete Velmora product images" on storage.obj
     bucket_id = 'velmora-products' and
     exists (select 1 from public.velmora_admins a where a.user_id = auth.uid())
   );
+
+-- Public storefront switch: becomes true after importing the existing catalogue.
+create table if not exists public.velmora_settings (setting_key text primary key, setting_value text not null);
+alter table public.velmora_settings enable row level security;
+drop policy if exists "Public can read catalogue mode" on public.velmora_settings;
+create policy "Public can read catalogue mode" on public.velmora_settings for select using (setting_key = 'catalog_migrated');
+drop policy if exists "Approved admins can manage catalogue mode" on public.velmora_settings;
+create policy "Approved admins can manage catalogue mode" on public.velmora_settings for all to authenticated using (exists (select 1 from public.velmora_admins a where a.user_id = auth.uid())) with check (exists (select 1 from public.velmora_admins a where a.user_id = auth.uid()));
