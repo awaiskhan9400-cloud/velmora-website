@@ -62,3 +62,29 @@ create policy "Approved admins can delete Velmora products" on public.velmora_pr
 -- Product images: create a public Storage bucket named "velmora-products" in Supabase Storage.
 -- Public read is needed to display published product photos. Upload/delete policies should
 -- be restricted to authenticated users who exist in velmora_admins (configure via Storage policies).
+
+-- Run after creating a PUBLIC Storage bucket named "velmora-products".
+drop policy if exists "Public can view Velmora product images" on storage.objects;
+create policy "Public can view Velmora product images" on storage.objects
+  for select using (bucket_id = 'velmora-products');
+drop policy if exists "Approved admins can upload Velmora product images" on storage.objects;
+create policy "Approved admins can upload Velmora product images" on storage.objects
+  for insert to authenticated with check (
+    bucket_id = 'velmora-products' and
+    exists (select 1 from public.velmora_admins a where a.user_id = auth.uid())
+  );
+drop policy if exists "Approved admins can update Velmora product images" on storage.objects;
+create policy "Approved admins can update Velmora product images" on storage.objects
+  for update to authenticated using (
+    bucket_id = 'velmora-products' and
+    exists (select 1 from public.velmora_admins a where a.user_id = auth.uid())
+  ) with check (
+    bucket_id = 'velmora-products' and
+    exists (select 1 from public.velmora_admins a where a.user_id = auth.uid())
+  );
+drop policy if exists "Approved admins can delete Velmora product images" on storage.objects;
+create policy "Approved admins can delete Velmora product images" on storage.objects
+  for delete to authenticated using (
+    bucket_id = 'velmora-products' and
+    exists (select 1 from public.velmora_admins a where a.user_id = auth.uid())
+  );
