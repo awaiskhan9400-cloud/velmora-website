@@ -9,6 +9,8 @@ Expo / React Native Android-first app for the existing Velmora Supabase catalogu
 - Manage product title, PKR price, category, variants, description and multiple photos.
 - Uploads photos to the existing public `velmora-products` Supabase Storage bucket.
 - No separate product database is created.
+- Admin sessions persist securely using React Native AsyncStorage.
+- Product changes refresh via Supabase Realtime, with a 45-second fallback refresh.
 
 ## Run locally
 Install Node.js 20 or newer, then from this folder run:
