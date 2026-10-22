@@ -16,11 +16,6 @@
     },
     "ios": {
       "bundleIdentifier": "com.velmora.store"
-    },
-    "extra": {
-      "eas": {
-        "projectId": ""
-      }
     }
   }
 }
