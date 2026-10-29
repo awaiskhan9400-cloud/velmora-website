@@ -1,0 +1,31 @@
+name: Velmora mobile app validation
+
+on:
+  push:
+    branches: [feature/shared-product-management]
+    paths:
+      - 'mobile-app/**'
+      - '.github/workflows/velmora-mobile-check.yml'
+  pull_request:
+    paths:
+      - 'mobile-app/**'
+      - '.github/workflows/velmora-mobile-check.yml'
+  workflow_dispatch:
+
+jobs:
+  android-bundle-check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Validate Expo config
+        run: npx expo config --type public --json > /tmp/velmora-expo-config.json
+      - name: Bundle Android JavaScript
+        run: npx expo export --platform android --output-dir dist

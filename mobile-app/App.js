@@ -1,4 +1,5 @@
 import 'react-native-url-polyfill/auto';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Image, KeyboardAvoidingView, Platform, Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
@@ -8,7 +9,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = 'https://umzxypaoccgcplluvwrg.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_TouM2LcIVLhzcxD4shW1oA_cUHVRo1Y';
-const db = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
+const db = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { storage: AsyncStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } });
 const RED = '#c8102e', BG = '#050505', PANEL = '#111111', MUTED = '#aaa39b';
 const categories = ['Fashion','Electronics','Home Essentials','Beauty & Care','Audio','Bags & Accessories','Fitness'];
 const money = n => 'PKR ' + Number(n || 0).toLocaleString('en-PK', { maximumFractionDigits: 0 });
@@ -33,7 +34,23 @@ export default function App() {
   const [photos, setPhotos] = useState([]);
   const [published, setPublished] = useState(true);
 
-  useEffect(() => { loadProducts(); }, []);
+  useEffect(() => {
+    loadProducts();
+    restoreAdminSession();
+    const channel = db.channel('velmora-products-mobile')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'velmora_products' }, () => loadProducts())
+      .subscribe();
+    // Fallback refresh also keeps the app in sync if realtime is temporarily unavailable.
+    const poll = setInterval(() => loadProducts(), 45000);
+    return () => { clearInterval(poll); db.removeChannel(channel); };
+  }, []);
+  async function restoreAdminSession() {
+    const { data: { session } } = await db.auth.getSession();
+    if (!session?.user) return;
+    const { data: approved, error } = await db.from('velmora_admins').select('user_id').eq('user_id', session.user.id).maybeSingle();
+    if (!error && approved) { setSignedIn(true); setAdmin(true); setMode('manage'); }
+    else await db.auth.signOut();
+  }
   async function loadProducts() {
     setLoading(true);
     const { data, error } = await db.from('velmora_products').select('*').order('created_at', { ascending: false });
